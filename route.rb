@@ -12,4 +12,10 @@ class Route
   def delete_station(station)
     @stations.delete(station) 
   end
-end  
+
+  def show_stations
+    @stations.each.with_index(1) do |station, x|
+      puts "#{x}. #{station.name}"
+    end
+  end
+end   

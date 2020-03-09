@@ -1,5 +1,5 @@
 class Station
-  atter_reader :name, :trains
+  attr_reader :name, :trains
   def initialize(name)
     @name = name
     @trains = []
@@ -13,7 +13,12 @@ class Station
     @trains.delete(train)
   end
 
-  def type_trains(carrige)
-    @trains.count { |train| train.type == carrige.to_sym }
+  def station_trains
+    puts "Поездов на станции #{@trains.size}"
+    if @trains.any?
+      @trains.each.with_index(1) do |train, x|
+        puts "#{x}. Поезд #{train.number}"
+      end
+    end
   end
 end

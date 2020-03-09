@@ -1,30 +1,10 @@
 class Train
-  attr_reader  :carriages, :station, :number, :type, :speed, :route
-  def initialize(number, type, carriages)
+  attr_reader :carriages, :station, :number, :speed, :route
+  def initialize(number)
     @number = number
-    @type = type.to_sym
-    @carriages
+    @carriages = []
     @speed = 0
-  end
-
-  def break
-    @speed = 0
-  end
-
-  def add_speed
-    @speed += 10
-  end
-
-  def reduce_speed
-    @speed -=10 if speed > 0
-  end
-
-  def add_carriage
-    @carriages += 1 if speed ==0
-  end
-
-  def del_carriage
-    @carriages -=1 if speed == 0 && carriages > 0
+    @route_index = 0
   end
 
   def set_route(route)
@@ -36,8 +16,20 @@ class Train
     current_station.add_train(self)
   end
 
-  def current_station
-    @route.stations[@route_index]
+  def brake
+    @speed = 0
+  end
+
+  def add_speed
+    @speed += 10
+  end
+
+  def reduce_speed
+    @speed -= 10 if speed > 0
+  end
+
+  def del_carriage
+    @carriages.delete_at(0)
   end
 
   def forward
@@ -68,6 +60,7 @@ class Train
     @route.stations[@route_index - 1]
   end
 
-
-
+  def current_station
+    @route.stations[@route_index]
+  end
 end
