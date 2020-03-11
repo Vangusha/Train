@@ -1,10 +1,20 @@
 class Train
   attr_reader :carriages, :station, :number, :speed, :route
+  include Manufacturer
+  include InstanceCounter
+  @@trains = {}
+
   def initialize(number)
+    register_instance
     @number = number
     @carriages = []
     @speed = 0
     @route_index = 0
+    @@trains[self.number] = self
+  end
+
+  def self.find(number)
+    @@trains[number]
   end
 
   def set_route(route)
