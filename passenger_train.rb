@@ -4,8 +4,6 @@ class PassengerTrain < Train
   end
 
   def add_carriage(carriage)
-    if carriage.class == PassengerCarriage
-      @carriages << carriage
-    end
+    @carriages << carriage if carriage.is_a? PassengerCarriage
   end
 end

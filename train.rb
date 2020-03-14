@@ -2,25 +2,27 @@ class Train
   attr_reader :carriages, :station, :number, :speed, :route
   include Manufacturer
   include InstanceCounter
+  include Validation
   @@trains = {}
 
+  NUMBER_TYPE = /^[a-zа-я0-9]{3}-?[a-zа-я0-9]{2}$/i
+
   def initialize(number)
-    register_instance
     @number = number
+    validate!
     @carriages = []
     @speed = 0
     @route_index = 0
     @@trains[self.number] = self
+    register_instance
   end
 
   def self.find(number)
     @@trains[number]
   end
 
-  def set_route(route)
-    unless @route.nil?
-      current_station.delete_train(self)
-    end
+  def route=(route)
+    current_station.delete_train(self) unless @route.nil?
     @route_index = 0
     @route = route
     current_station.add_train(self)
@@ -72,5 +74,17 @@ class Train
 
   def current_station
     @route.stations[@route_index]
+  end
+
+  def each_carriage
+    @carriages.each.with_index(1) { |carriage, x| yield(carriage, x) } unless @carriages.empty?
+  end
+
+  private
+
+  def validate!
+    raise 'Введен неверный формат номера, пример XXX-XX или XXXXX (только цифры и буквы)' if number !~ NUMBER_TYPE
+    raise 'Такой поезд уже существует' if @@trains[number] && @@trains[number] != self
+    true
   end
 end

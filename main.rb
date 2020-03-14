@@ -30,7 +30,11 @@ class Main
         show_stations
       when '10'
         show_station_trains
-      when 'exit', '11'
+      when '11'
+        show_all
+      when '12'
+        take_capacity
+      when 'exit', '13'
         exit
       when 'help'
         help
@@ -51,27 +55,38 @@ class Main
     puts '8. Управление поезда по маршруту'
     puts '9. Все станции'
     puts '10. Все поезда на станции'
-    puts '11. Выйти'
+    puts '11. Дерево приложения'
+    puts '12. Зарезирвировать место'
+    puts '13. Выйти'
   end
 
   private
+
   def create_station
     print 'Введите название станции: '
     name = gets.chomp
     @stations << Station.new(name)
     puts "Станция #{name} успешно создана"
+  rescue RuntimeError => e
+    puts e.message
+    retry
   end
 
   def create_train
     puts "Какой поезд вы хотите создать?\n1.Пассажирский\n2.Грузовой"
     choice = gets.chomp
-    print 'Введите номер поезда '
-    number = gets.chomp
-    case choice
-    when '1'
-      @trains << PassengerTrain.new(number)
-    when '2'
-      @trains << CargoTrain.new(number)
+    begin
+      print 'Введите номер поезда '
+      number = gets.chomp
+      case choice
+      when '1'
+        @trains << PassengerTrain.new(number)
+      when '2'
+        @trains << CargoTrain.new(number)
+      end
+    rescue RuntimeError => e
+      puts e.message
+      retry
     end
     puts "Поезд #{number} успешно создан"
   end
@@ -112,7 +127,7 @@ class Main
 
     puts 'Выберите маршрут'
     show_routes
-    train.set_route(@routes[gets.to_i - 1])
+    train.route = (@routes[gets.to_i - 1])
     puts "Маршрут поезду #{train.number} успешно указан"
   end
 
@@ -121,12 +136,16 @@ class Main
     print 'Сколько вагонов вы хотите добавить: '
     quantity = gets.to_i
     if train.class == PassengerTrain
+      print 'Сколько мест будет в одном вагоне: '
+      places = gets.to_i
       quantity.times do
-        train.add_carriage(PassengerCarriage.new)
+        train.add_carriage(PassengerCarriage.new(places))
       end
     else
+      print 'Какой объем одного вагона: '
+      volume = gets.to_i
       quantity.times do
-        train.add_carriage(CargoCarriage.new)
+        train.add_carriage(CargoCarriage.new(volume))
       end
     end
     puts "К поезду #{train.number} было добавлено #{quantity} вагонов"
@@ -158,11 +177,11 @@ class Main
   def select_train
     puts 'Выберите поезд'
     trains
-    train = @trains[gets.to_i - 1]
+    @trains[gets.to_i - 1]
   end
 
   def trains
-    @trains.each.with_index(1) {  |train, x| puts "#{x}. #{train.number} | вагонов #{train.carriages.size} | тип #{train.type}" }
+    @trains.each.with_index(1) { |train, x| puts "#{x}. #{train.number} | вагонов #{train.carriages.size} | тип #{train.type}" }
   end
 
   def show_routes
@@ -173,10 +192,50 @@ class Main
     @stations.each.with_index(1) { |station, x| puts "#{x}. #{station.name} | поездов #{station.trains.size}" }
   end
 
+  def show_all
+    @stations.each do |station|
+      puts "--Станция #{station.name}"
+      station.each_train do |train|
+        puts "Поезд #{train.number} | тип #{train.type} | вагонов #{train.carriages.size}"
+        train_carriages(train)
+      end
+    end
+  end
+
+  def take_capacity
+    train = select_train
+    train_carriages(train)
+    print 'Выберите вагон: '
+    carriage = train.carriages[gets.to_i - 1]
+    if carriage.is_a? PassengerCarriage
+      if carriage.free_capacity.zero?
+        puts "Ошибка! в вагоне #{carriage.number} нет свободных мест."
+      else
+        carriage.take_capacity
+        puts "Пассажир добавлен в вагон #{carriage.number} поезда #{train.number}"
+      end
+    else
+      print 'Какой объем товара загрузить: '
+      volume = gets.to_f
+      if volume > carriage.free_capacity
+        puts "Ошибка! Для загрузки доступно: #{carriage.free_capacity}"
+      else
+        carriage.take_capacity(volume)
+        puts "На вагон #{carriage.number} загружено #{volume}"
+      end
+    end
+  end
+
   def show_station_trains
     puts 'Выберите станцию'
     show_stations
     station = @stations[gets.to_i - 1]
     station.station_trains
+  end
+
+  def train_carriages(train)
+    train.each_carriage do |carriage, x|
+      puts "#{x}. Вагон #{carriage.number} | занято мест #{carriage.occupied_capacity}| свободно #{carriage.free_capacity}"
+    end
   end
 end
